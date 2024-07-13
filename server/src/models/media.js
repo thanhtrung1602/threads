@@ -13,12 +13,13 @@ module.exports = (sequelize, DataTypes) => {
   }
   Media.init(
     {
-      image: DataTypes.STRING,
+      media: DataTypes.STRING,
       post_id: DataTypes.INTEGER,
     },
     {
       sequelize,
       modelName: "Media",
+      tableName: "medias",
     }
   );
   return Media;

@@ -1,4 +1,19 @@
+const { where } = require("sequelize");
 const db = require("../models/index");
+
+async function getMediaPost(id) {
+  try {
+    const getMedia = await db.Media.findAll({
+      where: {
+        post_id: id,
+      },
+    });
+    return { getMedia };
+  } catch (error) {
+    throw error;
+  }
+}
+
 async function unLiked({ status, user_id, postId }) {
   try {
     const unLike = await db.Like.destroy({
@@ -128,13 +143,24 @@ async function post({ content, user_id }, files) {
   try {
     const newPost = await db.Post.create({
       content,
-      media: files,
       user_id,
     });
 
+    if (files && files.length > 0) {
+      await Promise.all(
+        files.map(async (file) => {
+          await db.Media.create({
+            media: file.path,
+            post_id: newPost.id,
+          });
+        })
+      );
+    }
+
     return { newPost };
   } catch (error) {
-    res.status(500).json({ error: "Failed to upload post" });
+    console.error("Error creating post:", error);
+    throw new Error("Failed to upload post");
   }
 }
 
@@ -161,5 +187,6 @@ module.exports = {
   post,
   getStatusLike,
   delPost,
+  getMediaPost,
   // mediaPost,
 };

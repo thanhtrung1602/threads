@@ -6,11 +6,14 @@ import icon from "~/assets/img";
 import { Link, useParams } from "react-router-dom";
 import { setHome, setProfile, setSearch } from "~/Redux/actionSlice";
 import { useEffect, useState } from "react";
-
+import Tippy from "@tippyjs/react/headless";
+import LogoutIcon from "@mui/icons-material/Logout";
+import { loginSuccess } from "~/Redux/authSlice";
 function Header() {
   const { id } = useParams();
   const { feedType } = useSelector((state) => state?.api.actions);
   const [urlIdUser, setUrlIdUser] = useState(id);
+  const [isLogout, setIsLogout] = useState(false);
   const u = useSelector((state) => state?.auth.login.currentUser);
   const dispatch = useDispatch();
   useEffect(() => {
@@ -80,22 +83,45 @@ function Header() {
             </button>
           </Link>
         </div>
-        <div className="relative  h-[60px] w-[60px] hover:bg-custom-bgC rounded-lg pb-[22px] ml-3">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="#4d4d4d"
-            viewBox="0 0 24 24"
-            strokeWidth={1.5}
-            stroke="currentColor"
-            className="h-6 w-6 text-[#4d4d4d] absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4"
+        <Tippy
+          interactive
+          visible={isLogout}
+          render={(attrs) => (
+            <div
+              className="text-[15px] text-[#f3f5f7] font-semibold p-2 w-[240px] border border-b-outline rounded-xl"
+              {...attrs}
+            >
+              <div
+                className="p-3 cursor-pointer flex items-center justify-between"
+                onClick={() => dispatch(loginSuccess(null))}
+              >
+                <span className="">Đăng xuất</span>
+                <LogoutIcon />
+              </div>
+            </div>
+          )}
+          onClickOutside={() => setIsLogout(false)}
+        >
+          <div
+            onClick={() => setIsLogout(true)}
+            className="relative h-[60px] w-[60px] hover:bg-custom-bgC rounded-lg pb-[22px] ml-3"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-            />
-          </svg>
-        </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="#4d4d4d"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="h-6 w-6 text-[#4d4d4d] absolute top-2/4 left-2/4 -translate-y-2/4 -translate-x-2/4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+              />
+            </svg>
+          </div>
+        </Tippy>
       </div>
     </div>
   );

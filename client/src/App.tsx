@@ -5,12 +5,14 @@ import Login from "~/pages/Auth/Login";
 import { Toaster } from "react-hot-toast";
 import Home from "~/pages/Home";
 import DefaultLayout from "~/components/DefaultLayout";
-// import Detail from "./pages/Home/detail";
 import Profile from "~/pages/Profile";
 import Detail from "~/pages/Home/detail";
 import Search from "~/components/feature/search";
+import ProtectedRoute from "./router";
+import { useSelector } from "react-redux";
 
 function App() {
+  const currentUser = useSelector((state) => state?.auth.login.currentUser);
   return (
     <div id="app">
       <Toaster position="top-center" reverseOrder={false} />
@@ -19,37 +21,48 @@ function App() {
           <Route
             path="/"
             element={
-              <DefaultLayout>
-                <Home />
-              </DefaultLayout>
+              <ProtectedRoute>
+                <DefaultLayout>
+                  <Home />
+                </DefaultLayout>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/:id"
             element={
-              <DefaultLayout>
-                <Profile />
-              </DefaultLayout>
+              <ProtectedRoute>
+                <DefaultLayout>
+                  <Profile />
+                </DefaultLayout>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/:idUser/post/:id"
             element={
-              <DefaultLayout>
-                <Detail />
-              </DefaultLayout>
+              <ProtectedRoute>
+                <DefaultLayout>
+                  <Detail />
+                </DefaultLayout>
+              </ProtectedRoute>
             }
           />
           <Route
             path="/search"
             element={
-              <DefaultLayout>
-                <Search />
-              </DefaultLayout>
+              <ProtectedRoute>
+                <DefaultLayout>
+                  <Search />
+                </DefaultLayout>
+              </ProtectedRoute>
             }
           />
           <Route path="/accounts/register" element={<Register />} />
-          <Route path="/accounts/login" element={<Login />} />
+          <Route
+            path="/accounts/login"
+            element={!currentUser ? <Login /> : <Home />}
+          />
         </Routes>
       </BrowserRouter>
     </div>

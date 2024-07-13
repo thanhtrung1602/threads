@@ -75,7 +75,7 @@ class UsersController {
     }
   }
   async updateUser(req, res) {
-    const file = req.file ? req.file.path : null;
+    const file = req.file && req.file.path;
     const { idUser, username, story, link } = req.body;
     const id = req.params.id;
 

@@ -46,8 +46,8 @@ const actionSlice = createSlice({
       state.actions.isEdit = false;
     },
     setDetail: (state, action) => {
-      state.actions.feedType = action.payload.feedType;
-      state.actions.idPost = action.payload.idPost;
+      state.actions.feedType = "comment";
+      state.actions.idPost = action.payload;
     },
     setIdUser: (state, action) => {
       state.actions.idUser = action.payload;

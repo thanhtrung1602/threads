@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { loginUser } from "~/Redux/requsetApi";
 function Login() {
   const [user, setUser] = useState("");
@@ -58,6 +58,12 @@ function Login() {
               <p className="text-[#777] text-[15px] text-center">
                 Forgot password?
               </p>
+              <div className="text-[#777] flex items-center justify-center gap-2">
+                <span>Bạn chưa có tài khoản?</span>
+                <Link to={`/accounts/register`} className="text-[#fff]">
+                  <span>Đăng ký</span>
+                </Link>
+              </div>
             </form>
             <div className="mt-6 flex items-center mb-3 gap-2">
               <div className="border w-[45%]"></div>

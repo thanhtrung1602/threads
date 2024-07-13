@@ -20,7 +20,6 @@ import EditProfile from "./editProfile";
 function Profile() {
   const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
-
   const refProfile = useRef(null);
   const u = useSelector((state) => state?.auth.login.currentUser);
   const api = useSelector((state) => state?.api.actions);
@@ -29,7 +28,7 @@ function Profile() {
   const { mutate: unFollow } = FetchDelete();
   const { data: countFollowers, refetch: refetchFollower } = fetchId(
     "/users/getCountFollower/",
-    String(api.idUser)
+    String(id)
   );
   const { data: getFollows } = fetchId("/users/getFollow/", String(id));
   const { data: users, refetch: refetchGetMe } = fetchId(
@@ -56,7 +55,6 @@ function Profile() {
       followerId: u?.idUser,
       followingId: id,
     };
-    console.log(data);
     follow(
       { url: "/users/follow", data },
       {
@@ -100,7 +98,7 @@ function Profile() {
   return (
     <div
       className={api.isEdit && "relative w-full h-full "}
-      onClick={() => dispatch(setCloseEditProfile(false))}
+      onClick={() => dispatch(setCloseEditProfile())}
     >
       <div
         className={` ${

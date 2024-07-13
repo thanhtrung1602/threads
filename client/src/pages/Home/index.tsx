@@ -13,7 +13,7 @@ function Home() {
     <div>
       <div className="flex justify-center w-full">
         <div className="">
-          <div className="text-center min-h-[60px] z-50 flex items-center justify-center w-[650px] bg-bg-primary sticky top-0">
+          <div className="text-center min-h-[60px] z-40 flex items-center justify-center w-[650px] bg-bg-primary sticky top-0">
             <span className="text-center text-[#f3f5f7] font-semibold text-[15px]">
               Dành cho bạn
             </span>
@@ -31,28 +31,14 @@ function Home() {
                 />
                 <div
                   className="w-full"
-                  onClick={() =>
-                    dispatch(
-                      setCreatePost({
-                        isPost: true,
-                        postApi: "/posts/upPost/",
-                      })
-                    )
-                  }
+                  onClick={() => dispatch(setCreatePost())}
                 >
                   <span>Bắt đầu thread...</span>
                 </div>
               </div>
               <div>
                 <button
-                  onClick={() =>
-                    dispatch(
-                      setCreatePost({
-                        isPost: true,
-                        postApi: "/posts/upPost/",
-                      })
-                    )
-                  }
+                  onClick={() => dispatch(setCreatePost())}
                   className="px-4 text-[#f3f5f7] text-center border-b-outline border h-9 rounded-[10px]"
                 >
                   Đăng
@@ -70,14 +56,7 @@ function Home() {
       <div className="bottom-9 right-9 flex items-center justify-center rounded-2xl fixed bg-[#181818] border border-b-outline">
         <button
           className="h-[68px] w-[82px]"
-          onClick={() =>
-            dispatch(
-              setCreatePost({
-                isPost: true,
-                postApi: "/posts/upPost/",
-              })
-            )
-          }
+          onClick={() => dispatch(setCreatePost())}
         >
           <FontAwesomeIcon className="text-white h-6 w-6 " icon={faPlus} />
         </button>

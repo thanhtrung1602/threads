@@ -33,7 +33,7 @@ function EditProfile() {
     };
   }, [image]);
 
-  const handleImage = (e: any) => {
+  const handleImage = (e) => {
     const file = e.target.files[0];
     if (file) {
       file.preview = URL.createObjectURL(file);
@@ -55,7 +55,13 @@ function EditProfile() {
     formData.append("idUser", idUser);
     formData.append("username", username);
 
-    formData.append("image", image);
+    console.log(imageUpdate);
+
+    if (image) {
+      formData.append("image", image);
+    } else {
+      formData.append("image", imageUpdate);
+    }
 
     formData.append("story", story);
     formData.append("link", link);
@@ -118,8 +124,8 @@ function EditProfile() {
             className="absolute h-[40px] w-[40px] opacity-0 top-2/4 left-2/4 -translate-x-2/4 -translate-y-2/4 "
             type="file"
             onChange={handleImage}
-            name=""
-            id=""
+            name="file"
+            id="file"
           />
         </div>
       </div>

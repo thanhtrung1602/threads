@@ -18,7 +18,6 @@ module.exports = (sequelize, DataTypes) => {
   Post.init(
     {
       content: DataTypes.STRING,
-      media: DataTypes.STRING,
       user_id: DataTypes.STRING,
     },
     {

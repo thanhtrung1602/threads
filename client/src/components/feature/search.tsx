@@ -1,15 +1,21 @@
 import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import SearchApi from "~/API/Search";
+import { IUser } from "~/types/user";
+import ResultSearch from "./ResultSearch";
 
 function Search() {
+  const [key, setKey] = useState("");
   const refSearch = useRef(null);
   useEffect(() => {
     if (refSearch.current) {
       refSearch.current.focus();
     }
   }, []);
-  console.log(refSearch);
+
+  const { data: searchs } = SearchApi({ url: "/users/search/", key: key });
+  const search: IUser[] = searchs?.search || [];
   return (
     <div className="">
       <div className="text-center h-[60px] z-50 flex items-center justify-center w-[650px] bg-bg-primary fixed ">
@@ -26,6 +32,8 @@ function Search() {
                 ref={refSearch}
                 className="bg-[#0a0a0a] w-full placeholder:[text-[#777] outline-none text-[#f3f5f7]"
                 type="text"
+                value={key}
+                onChange={(e) => setKey(e.target.value)}
                 name=""
                 id=""
                 placeholder="Tìm kiếm"
@@ -33,6 +41,9 @@ function Search() {
             </div>
           </form>
         </div>
+        {search.map((user) => (
+          <ResultSearch key={user.id} user={user} />
+        ))}
       </div>
     </div>
   );

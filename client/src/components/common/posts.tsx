@@ -20,8 +20,6 @@ function Posts() {
     }
   }, [idUser, id, paramsId]);
 
-  console.table({ idUser, paramsId, id });
-
   const getPostEndPoint = () => {
     if (feedType === "profile" && id === paramsId) {
       return `/posts/getAllPostUser/${id}`;

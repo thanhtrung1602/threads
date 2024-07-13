@@ -117,6 +117,22 @@ async function updateUser(
         { user_id: updatingIdUser },
         { where: { user_id: id }, transaction }
       );
+
+      await db.Like.update(
+        { user_id: updatingIdUser },
+        { where: { user_id: id }, transaction }
+      );
+
+      await db.Follow.update(
+        { followingId: updatingIdUser },
+        { where: { followingId: id }, transaction }
+      );
+
+      // Update followerId
+      await db.Follow.update(
+        { followerId: updatingIdUser },
+        { where: { followerId: id }, transaction }
+      );
     }
 
     // Commit the transaction

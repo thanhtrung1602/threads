@@ -117,13 +117,15 @@ class PostController {
   // }
 
   async upPost(req, res) {
-    const file = req.file ? req.file.path : null;
+    const file = req.files;
     const { content, user_id } = req.body;
+    console.log("file >>>>>>>>", file);
     try {
       if (!user_id) {
         return res.status(500).json("you are not log in");
       }
       const upload = await postsService.post(req.body, file);
+      console.log(upload);
       return res.status(200).json(upload);
     } catch (error) {
       return res.status(500).json({
@@ -139,6 +141,22 @@ class PostController {
     try {
       const del = await postsService.delPost(id);
       return res.status(200).json(del);
+    } catch (error) {
+      return res.status(500).json({
+        EM: "error message",
+        EC: "-1",
+        DT: "",
+      });
+    }
+  }
+
+  async getMedia(req, res) {
+    const id = req.params.id;
+    console.table({ id });
+    try {
+      const mediaPost = await postsService.getMediaPost(id);
+      console.log(mediaPost);
+      return res.status(200).json(mediaPost);
     } catch (error) {
       return res.status(500).json({
         EM: "error message",

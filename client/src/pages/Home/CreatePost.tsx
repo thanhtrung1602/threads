@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { faImage } from "@fortawesome/free-regular-svg-icons";
 import { faClose } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQueryClient } from "@tanstack/react-query";
@@ -7,11 +6,12 @@ import moment from "moment";
 import React, { useEffect, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchPost } from "~/API";
+import { fetchId, fetchPost } from "~/API";
 import { setCloseComment, setCloseCreatePost } from "~/Redux/actionSlice";
 import instance from "~/services/customize-axios";
 import { IPost } from "~/types/post";
 import { BsImages } from "react-icons/bs";
+
 interface FileWithPreview extends File {
   preview?: string;
 }
@@ -19,7 +19,7 @@ interface FileWithPreview extends File {
 function CreatePost() {
   const queryClient = useQueryClient();
   const [content, setContent] = useState("");
-  const [image, setImage] = useState<FileWithPreview | null>(null);
+  const [images, setImages] = useState<FileWithPreview[]>([]);
   const [post, setPost] = useState<IPost | null>(null);
   const u = useSelector((state) => state?.auth.login.currentUser);
   const { mutate: posts } = fetchPost();
@@ -27,7 +27,7 @@ function CreatePost() {
   const refPost = useRef(null);
   const refVideo = useRef(null);
   const refFocus = useRef(null);
-  console.log(u?.image);
+
   useEffect(() => {
     if (refVideo.current) {
       refVideo.current.autoplay = true;
@@ -42,13 +42,13 @@ function CreatePost() {
 
   const api = useSelector((state) => state?.api.actions);
 
-  useEffect(() => {
-    return () => {
-      if (image) {
-        if (image.preview) URL.revokeObjectURL(image.preview);
-      }
-    };
-  }, [image]);
+  // useEffect(() => {
+  //   return () => {
+  //     if (image) {
+  //       if (image.preview) URL.revokeObjectURL(image.preview);
+  //     }
+  //   };
+  // }, [image]);
 
   useEffect(() => {
     instance
@@ -56,20 +56,25 @@ function CreatePost() {
       .then((response) => setPost(response.data?.getPostId));
   }, [api]);
 
-  const handleRevokeImg = () => {
-    if (image) {
-      if (image.preview) {
-        URL.revokeObjectURL(image.preview);
-        setImage(null);
+  const handleRevokeImg = (i) => {
+    setImages((prevImage) => {
+      const newImage = [...prevImage];
+      if (newImage[i].preview) {
+        URL.revokeObjectURL(newImage[i].preview);
       }
-    }
+      newImage.splice(i, 1);
+      return newImage;
+    });
   };
 
-  const handleImage = (e: any) => {
-    const file = e.target.files[0];
-    if (file) {
-      file.preview = URL.createObjectURL(file);
-      setImage(file);
+  const handleImage = (e) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files).map((file) => {
+        file.preview = URL.createObjectURL(file);
+        return file;
+      });
+      setImages((prevImages) => [...prevImages, ...fileArray]);
     }
     e.target.value = null;
   };
@@ -80,9 +85,10 @@ function CreatePost() {
     const id: string | undefined = u?.idUser;
     formData.append("content", content);
     formData.append("user_id", String(id));
-    if (image) {
-      formData.append("media", image);
+    for (const image of images) {
+      formData.append(`media`, image);
     }
+
     formData.append("postId", String(api.idComment));
 
     posts(
@@ -100,18 +106,12 @@ function CreatePost() {
             queryKey: ["/posts/getAllPost"],
           });
           queryClient.invalidateQueries({
-            queryKey: [`/comment/getAllPost/${post?.id}`],
-          });
-          queryClient.invalidateQueries({
-            queryKey: [`/comment/getComment/${post?.id}`],
+            queryKey: [`/posts/getAllPostUser/${id}`],
           });
         },
         onError: (error) => {
           console.error("Error:", error);
           toast.error("Đăng bài thất bại");
-        },
-        onSettled: (data) => {
-          !data && toast.loading("Đang đăng...");
         },
       }
     );
@@ -220,56 +220,63 @@ function CreatePost() {
                 />
               </div>
             </form>
-            {(image && image?.name.endsWith(".jpg")) ||
-            image?.name.endsWith(".jpeg") ||
-            image?.name.endsWith(".png") ? (
-              <div className="flex">
-                <div className="flex items-center gap-2 relative">
-                  {image && (
-                    <div className="absolute z-50 top-2 right-2">
-                      <div
-                        className="relative w-[24px] h-[24px] rounded-full bg-bg-primary"
-                        onClick={handleRevokeImg}
-                      >
-                        <FontAwesomeIcon
-                          className="text-[#fff] flex items-center justify-center absolute top-2/4 left-2/4 -translate-x-2/4 -translate-y-2/4"
-                          icon={faClose}
-                        />
-                      </div>
-                    </div>
-                  )}
+            {images.length > 0 && (
+              <div className="flex items-center gap-2">
+                {images && images.length > 0 ? (
+                  images.map((image, index) => (
+                    <div className="flex " key={index}>
+                      <div className="flex items-center gap-2 relative">
+                        <div className="absolute z-50 top-2 right-2">
+                          <div
+                            className="relative w-[24px] h-[24px] rounded-full bg-bg-primary"
+                            onClick={() => handleRevokeImg(index)}
+                          >
+                            <FontAwesomeIcon
+                              className="text-[#fff] flex items-center justify-center absolute top-2/4 left-2/4 -translate-x-2/4 -translate-y-2/4"
+                              icon={faClose}
+                            />
+                          </div>
+                        </div>
 
-                  <img
-                    className="rounded-xl flex relative h-[430px] object-cover "
-                    src={image.preview}
-                    alt=""
-                  />
-                </div>
-              </div>
-            ) : (
-              <div className="flex">
-                <div className="flex items-center gap-2 relative">
-                  {image && (
-                    <div className="absolute z-50 top-2 right-2">
-                      <div
-                        className="relative w-[24px] h-[24px] rounded-full bg-bg-primary"
-                        onClick={handleRevokeImg}
-                      >
-                        <FontAwesomeIcon
-                          className="text-[#fff] flex items-center justify-center absolute top-2/4 left-2/4 -translate-x-2/4 -translate-y-2/4"
-                          icon={faClose}
-                        />
+                        {image.type.startsWith("image") ? (
+                          <img
+                            className={`${
+                              images.length > 1 && "max-h-[242px]"
+                            } rounded-xl flex relative h-[430px] object-cover w-full`}
+                            src={image.preview}
+                            alt=""
+                            key={index}
+                          />
+                        ) : (
+                          <video
+                            className={`${
+                              images.length > 1 && "max-h-[242px]"
+                            } rounded-xl flex relative h-[430px] object-cover`}
+                            src={image.preview}
+                            ref={refVideo}
+                            key={index}
+                          ></video>
+                        )}
                       </div>
                     </div>
-                  )}
-                  {image && (
-                    <video
-                      className="rounded-xl flex relative h-[430px] object-cover"
-                      src={image?.preview}
-                      ref={refVideo}
-                    ></video>
-                  )}
-                </div>
+                  ))
+                ) : (
+                  <div className="flex items-center gap-2 relative">
+                    <div className="relative w-[24px] h-[24px] rounded-full bg-bg-primary">
+                      <FontAwesomeIcon
+                        className="text-[#fff] flex items-center justify-center absolute top-2/4 left-2/4 -translate-x-2/4 -translate-y-2/4"
+                        icon={faClose}
+                      />
+                    </div>
+                    {images && images.length > 0 && (
+                      <video
+                        className="rounded-xl flex relative h-[430px] object-cover"
+                        src={images[0].preview}
+                        ref={refVideo}
+                      ></video>
+                    )}
+                  </div>
+                )}
               </div>
             )}
             <div className=" mt-2 flex items-center gap-3">
@@ -280,8 +287,8 @@ function CreatePost() {
                   type="file"
                   onChange={handleImage}
                   multiple
-                  name=""
-                  id=""
+                  name="file"
+                  id="file"
                 />
               </div>
             </div>

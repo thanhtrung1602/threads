@@ -11,6 +11,7 @@ router.get("/getOnePost/:id", postController.getOnePost);
 router.get("/getAllPostUser/:id", postController.getAllPostUser);
 router.get("/getAllPost", postController.getAllPost);
 router.delete("/delPost/:id", postController.delPost);
-router.post("/upPost", uploadCloud.single("media"), postController.upPost);
+router.get("/getMedia/:id", postController.getMedia);
+router.post("/upPost", uploadCloud.array("media", 10), postController.upPost);
 
 module.exports = router;

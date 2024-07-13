@@ -15,8 +15,14 @@ function FetchPost() {
 
 export function FetchDelete() {
   return useMutation({
-    mutationFn: ({ url, data }: { url: string; data: object }) =>
+    mutationFn: ({ url, data }: { url: string; data?: object }) =>
       instance.delete(url, { data }),
+  });
+}
+
+export function FetchDel() {
+  return useMutation({
+    mutationFn: (url: string) => instance.delete(url),
   });
 }
 

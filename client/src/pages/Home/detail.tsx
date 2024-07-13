@@ -18,11 +18,13 @@ import { IPost } from "~/types/post";
 import { fetchAll, fetchId, fetchPost } from "~/API";
 import { FetchDelete } from "~/API/FetchPost";
 import { IUser } from "~/types/user";
-import { setComment } from "~/Redux/actionSlice";
+import { setComment, setHome } from "~/Redux/actionSlice";
 import Posts from "~/components/common/posts";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import VolumeOffIcon from "@mui/icons-material/VolumeOff";
 import VolumeUpIcon from "@mui/icons-material/VolumeUp";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+
 type Liked = {
   id: number;
   status: boolean;
@@ -30,6 +32,13 @@ type Liked = {
   postId: number;
   userData: IUser;
 };
+
+type Media = {
+  id: number;
+  media: string;
+  post_id: number;
+};
+
 function Detail() {
   const queryClient = useQueryClient();
   const { id } = useParams();
@@ -41,6 +50,7 @@ function Detail() {
   const dispatch = useDispatch();
   const [statusLike, setStatusLike] = useState<Liked[]>([]);
   const { data: getStatus } = fetchId("/posts/getLike/", Number(post?.id));
+  const { data: mediaPost } = fetchId("/posts/getMedia/", Number(id));
   const [onValue, setOnValue] = useState(true);
   const { data: countLikes } = fetchId(
     "/posts/getCountLike/",
@@ -52,13 +62,14 @@ function Detail() {
   );
   const { data: getFollows } = fetchId(
     "/users/getFollow/",
-    String(post?.userData?.id)
+    String(post?.userData?.idUser)
   );
   const countComment = countComments?.count;
   const countLike = countLikes?.count;
 
   const refVideo = useRef(null);
-
+  const medias = mediaPost?.getMedia;
+  console.log(medias);
   useEffect(() => {
     if (refVideo.current) {
       refVideo.current.autoplay = true;
@@ -120,14 +131,18 @@ function Detail() {
 
   const isLiked = statusLike.some((like) => like.user_id === u?.idUser);
   const isFollow = getFollows?.allFollow.some(
-    (follow: { followerId: string }) => follow.followerId === u?.idUser
+    (follow: { followerId: string }) => {
+      const result = follow.followerId === u?.idUser;
+      return result;
+    }
   );
   return (
     <div>
-      <div className="text-center h-[60px] z-50 flex items-center justify-center w-[650px] bg-bg-primary fixed ">
-        <span className="text-center text-[#f3f5f7] font-semibold text-[15px]">
-          Thread
-        </span>
+      <div className="text-center h-[60px] z-50 flex items-center justify-center w-[650px] bg-bg-primary fixed text-[#f3f5f7]">
+        <Link to={`/`} onClick={() => dispatch(setHome())}>
+          <ArrowBackIcon className="" />
+        </Link>
+        <p className="text-center w-full  font-semibold text-[15px]">Thread</p>
       </div>
       <div className="w-[640px] min-h-[686px] mt-16 border border-b-outline rounded-t-3xl">
         <div className="px-6 pt-6">
@@ -152,11 +167,8 @@ function Detail() {
                     </div>
                   )}
                   {isFollow && (
-                    <div className="w-[16px] border border-bg-primary h-[16px] absolute rounded-full flex items-center justify-center bg-white bottom-[-2px] right-0">
-                      <FontAwesomeIcon
-                        className="w-[9px] h-[9px flex items-center justify-center"
-                        icon={faCheck}
-                      />
+                    <div className="w-[16px] h-[16px] absolute rounded-full flex items-center justify-center bg-white bottom-[-2px] right-0">
+                      <FontAwesomeIcon className="w-3 h-3" icon={faCheck} />
                     </div>
                   )}
                 </div>
@@ -178,45 +190,49 @@ function Detail() {
                   .map((content, index) => <p key={index}>{content}</p>)}
             </div>
             <div>
-              {post?.media && (
-                <div className="flex gap-1.5">
-                  {post?.media &&
-                  (post?.media.endsWith(".jpg") ||
-                    post?.media.endsWith(".jpeg") ||
-                    post.media.endsWith(".png")) ? (
-                    <div className="flex gap-1.5">
-                      <picture>
-                        <img
-                          className="rounded-lg max-h-[450px] object-cover"
-                          src={post?.media}
-                          alt=""
-                        />
-                      </picture>
-                    </div>
-                  ) : (
-                    <div className="relative rounded-lg">
-                      <video
-                        src={post?.media}
-                        className="max-h-[450px] rounded-lg object-cover"
-                        ref={refVideo}
-                      ></video>
-                      <div
-                        className="absolute right-2 bottom-3"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setOnValue(!onValue);
-                        }}
-                      >
-                        {onValue ? (
-                          <VolumeOffIcon className="text-[#f3f5f7]" />
+              {medias &&
+                medias.map(
+                  (media: Media) =>
+                    media && (
+                      <div className="flex gap-1.5">
+                        {media &&
+                        (media?.media.endsWith(".jpg") ||
+                          media?.media.endsWith(".jpeg") ||
+                          media?.media.endsWith(".png")) ? (
+                          <div className="flex gap-1.5">
+                            <picture>
+                              <img
+                                className="rounded-lg max-h-[450px] object-cover"
+                                src={media?.media}
+                                alt=""
+                              />
+                            </picture>
+                          </div>
                         ) : (
-                          <VolumeUpIcon className="text-[#f3f5f7]" />
+                          <div className="relative rounded-lg">
+                            <video
+                              src={media?.media}
+                              className="max-h-[450px] rounded-lg object-cover"
+                              ref={refVideo}
+                            ></video>
+                            <div
+                              className="absolute right-2 bottom-3"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setOnValue(!onValue);
+                              }}
+                            >
+                              {onValue ? (
+                                <VolumeOffIcon className="text-[#f3f5f7]" />
+                              ) : (
+                                <VolumeUpIcon className="text-[#f3f5f7]" />
+                              )}
+                            </div>
+                          </div>
                         )}
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )
+                )}
             </div>
             <div className="flex items-center justify-start ">
               <div className="text-[#ccc] flex items-center ">
