@@ -1,75 +1,17 @@
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
-import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { fetchId, fetchPost } from "~/API";
-import { FetchDelete } from "~/API/FetchPost";
 import { setProfile } from "~/Redux/actionSlice";
 import { IUser } from "~/types/user";
+import Follow from "../common/follow";
 
 function ResultSearch({ user }: { user: IUser }) {
   const u = useSelector((state) => state?.auth.login.currentUser);
-  const queryClient = useQueryClient();
   const dispatch = useDispatch();
-  const { data: countFollowers, refetch: refetchFollower } = fetchId(
-    "/users/getCountFollower/",
-    String(user.idUser)
-  );
-  const { data: getFollows } = fetchId(
-    "/users/getFollow/",
-    String(user.idUser)
-  );
-  const { mutate: follow } = fetchPost();
-  const { mutate: unFollow } = FetchDelete();
-  useEffect(() => {
-    refetchFollower();
-  }, []);
-  const countFollower = countFollowers?.countFollower;
-  const isFollow = getFollows?.allFollow.some(
-    (follow: { followerId: string }) => follow.followerId === u?.idUser
-  );
 
-  const handleFollow = () => {
-    const data = {
-      followerId: u?.idUser,
-      followingId: user?.idUser,
-    };
-    follow(
-      { url: "/users/follow", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getCountFollower/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getFollow/"],
-          });
-        },
-      }
-    );
-  };
-
-  const handleUnFollow = () => {
-    const data = {
-      followerId: u?.idUser,
-      followingId: user?.idUser,
-    };
-    unFollow(
-      { url: "/users/unFollow", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getCountFollower/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getFollow/"],
-          });
-          toast("Đã bỏ theo dõi");
-        },
-      }
-    );
-  };
+  const { isFollow, countFollower, handleFollow, handleUnFollow } = Follow({
+    meId: u?.idUser,
+    youId: String(user?.idUser),
+  });
 
   return (
     <div className="pt-4 pl-6 w-full">

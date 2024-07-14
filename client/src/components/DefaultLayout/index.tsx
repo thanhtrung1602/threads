@@ -40,20 +40,24 @@ function DefaultLayout({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="relative w-full" onClick={handleClose}>
+    <div className="relative w-full h-full bg-bg-primary" onClick={handleClose}>
       <div
         className={` ${
-          api.isPost || api.isPostComment ? "opacity-20 fixed" : ""
+          api.isPost || api.isPostComment
+            ? "opacity-90 fixed bg-bg-primary"
+            : ""
         } bg-bg-primary w-full  flex -z-10`}
         onClick={(e) =>
           api.isPost || api.isPostComment ? null : e.stopPropagation()
         }
       >
         <Header />
-        <div className="flex justify-center w-full">{children}</div>
+        <div className="flex justify-center w-full bg-bg-primary h-full">
+          {children}
+        </div>
       </div>
       <div
-        className={`${topIsPost} absolute top-[180px] left-[30%] z-50 `}
+        className={`${topIsPost} absolute top-[80px] left-[30%] z-50 `}
         ref={refPost}
         onClick={(e) => e.stopPropagation()}
       >

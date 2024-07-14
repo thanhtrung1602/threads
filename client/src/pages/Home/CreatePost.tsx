@@ -11,6 +11,8 @@ import { setCloseComment, setCloseCreatePost } from "~/Redux/actionSlice";
 import instance from "~/services/customize-axios";
 import { IPost } from "~/types/post";
 import { BsImages } from "react-icons/bs";
+import { IMedia } from "~/types/media";
+import Media from "~/components/common/mediaPost";
 
 interface FileWithPreview extends File {
   preview?: string;
@@ -22,12 +24,13 @@ function CreatePost() {
   const [images, setImages] = useState<FileWithPreview[]>([]);
   const [post, setPost] = useState<IPost | null>(null);
   const u = useSelector((state) => state?.auth.login.currentUser);
+  const { data: mediaPost } = fetchId("/posts/getMedia/", Number(post?.id));
   const { mutate: posts } = fetchPost();
   const dispatch = useDispatch();
   const refPost = useRef(null);
   const refVideo = useRef(null);
   const refFocus = useRef(null);
-
+  const medias = mediaPost?.getMedia;
   useEffect(() => {
     if (refVideo.current) {
       refVideo.current.autoplay = true;
@@ -135,10 +138,10 @@ function CreatePost() {
         ref={refPost}
       >
         {api.isPostComment && (
-          <div className="flex mb-1">
-            <div className="mt-1 flex flex-col items-center gap-2 ">
+          <div className="flex mb-1 h-full">
+            <div className="mt-1 flex flex-col items-center gap-2 h-full">
               <img
-                className="h-[36px] w-[36.58px] rounded-full bg-white object-cover"
+                className="h-[36px] w-[36px] rounded-full bg-white object-cover"
                 src={
                   post?.userData?.image ||
                   "https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg"
@@ -160,31 +163,19 @@ function CreatePost() {
                 {post?.content &&
                   post?.content.split("\n").map((p, i) => <p key={i}>{p}</p>)}
               </div>
-              {post?.media && (
-                <div className="flex flex-col gap-1.5 ml-3">
-                  {post?.media &&
-                  (post?.media.endsWith(".jpg") ||
-                    post?.media.endsWith(".jpeg") ||
-                    post?.media.endsWith(".png")) ? (
-                    <div className="flex gap-1.5">
-                      <picture>
-                        <img
-                          className="rounded-lg max-h-[450px] object-cover"
-                          src={post?.media}
-                          alt=""
-                        />
-                      </picture>
-                    </div>
-                  ) : (
-                    <div>
-                      <video
-                        src={post?.media}
-                        className="max-h-[450px] rounded-lg object-cover"
-                      ></video>
-                    </div>
-                  )}
-                </div>
-              )}
+              <div
+                className={` flex items-center gap-2 overflow-x-scroll no-scrollbar`}
+              >
+                {medias &&
+                  medias.map((media: IMedia, index: number) => (
+                    <Media
+                      index={index}
+                      key={media.id}
+                      media={media}
+                      medias={medias}
+                    />
+                  ))}
+              </div>
             </div>
           </div>
         )}

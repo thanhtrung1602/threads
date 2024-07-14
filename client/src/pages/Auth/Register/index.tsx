@@ -31,7 +31,7 @@ function Register() {
   };
 
   return (
-    <div className="flex items-center justify-center mt-6">
+    <div className="flex items-center justify-center mt-6 bg-white">
       <div className="flex gap-3">
         <div className="">
           <img

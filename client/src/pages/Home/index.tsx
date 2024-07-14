@@ -45,7 +45,7 @@ function Home() {
                 </button>
               </div>
             </div>
-            <div className="bg-second-color w-[640px] border-r border-b-outline rounded-tr-3xl rounded-tl-3xl">
+            <div className="bg-second-color w-[640px] min-h-[620px] border-r border-b-outline rounded-tr-3xl rounded-tl-3xl">
               <div className="sticky top-0 bg-second-color w-[640px] border-r border-b-outline">
                 <Posts />
               </div>

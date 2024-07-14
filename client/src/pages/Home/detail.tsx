@@ -10,52 +10,25 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import moment from "moment";
-import { useQueryClient } from "@tanstack/react-query";
 import { useDispatch, useSelector } from "react-redux";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import { useEffect, useRef, useState } from "react";
 import { IPost } from "~/types/post";
-import { fetchAll, fetchId, fetchPost } from "~/API";
-import { FetchDelete } from "~/API/FetchPost";
-import { IUser } from "~/types/user";
+import { fetchAll, fetchId } from "~/API";
 import { setComment, setHome } from "~/Redux/actionSlice";
 import Posts from "~/components/common/posts";
 import { Link, useParams } from "react-router-dom";
-import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-
-type Liked = {
-  id: number;
-  status: boolean;
-  user_id: string;
-  postId: number;
-  userData: IUser;
-};
-
-type Media = {
-  id: number;
-  media: string;
-  post_id: number;
-};
+import { IMedia } from "~/types/media";
+import Media from "~/components/common/mediaPost";
+import Like from "~/components/common/like";
 
 function Detail() {
-  const queryClient = useQueryClient();
   const { id } = useParams();
   const { data: posts } = fetchAll(`/posts/getOnePost/${id}`);
   const post: IPost = posts?.getPostId;
   const u = useSelector((state) => state?.auth.login.currentUser);
-  const { mutate: liked, reset: resetLiked } = fetchPost();
-  const { mutate: unLiked, reset: resetUnLiked } = FetchDelete();
   const dispatch = useDispatch();
-  const [statusLike, setStatusLike] = useState<Liked[]>([]);
-  const { data: getStatus } = fetchId("/posts/getLike/", Number(post?.id));
   const { data: mediaPost } = fetchId("/posts/getMedia/", Number(id));
-  const [onValue, setOnValue] = useState(true);
-  const { data: countLikes } = fetchId(
-    "/posts/getCountLike/",
-    Number(post?.id)
-  );
   const { data: countComments } = fetchId(
     "/comment/getCountComment/",
     Number(post?.id)
@@ -65,77 +38,19 @@ function Detail() {
     String(post?.userData?.idUser)
   );
   const countComment = countComments?.count;
-  const countLike = countLikes?.count;
-
-  const refVideo = useRef(null);
   const medias = mediaPost?.getMedia;
-  console.log(medias);
-  useEffect(() => {
-    if (refVideo.current) {
-      refVideo.current.autoplay = true;
-      refVideo.current.loop = true;
-      refVideo.current.muted = onValue;
-      refVideo.current.play();
-    }
-  }, [onValue]);
 
-  useEffect(() => {
-    setStatusLike(getStatus?.status || []);
-  }, [getStatus]);
-
-  const handleLiked = (postId: number) => {
-    const data = {
-      postId,
-      user_id: u?.idUser,
-      status: 1,
-    };
-    liked(
-      { url: "/posts/liked", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/posts/getCountLike/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/posts/getLike/"],
-          });
-        },
-      }
-    );
-  };
-
-  const handleUnLike = (postId: number) => {
-    const data = {
-      postId,
-      user_id: u?.idUser,
-    };
-    unLiked(
-      { url: "/posts/unLiked", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/posts/getCountLike/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/posts/getLike/"],
-          });
-        },
-      }
-    );
-  };
-
-  useEffect(() => {
-    resetLiked();
-    resetUnLiked();
-  }, [resetLiked, resetUnLiked]);
-
-  const isLiked = statusLike.some((like) => like.user_id === u?.idUser);
   const isFollow = getFollows?.allFollow.some(
     (follow: { followerId: string }) => {
       const result = follow.followerId === u?.idUser;
       return result;
     }
   );
+  const { isLiked, countLike, handleLiked, handleUnLike } = Like({
+    meId: u?.idUser,
+    postId: post?.id,
+  });
+
   return (
     <div>
       <div className="text-center h-[60px] z-50 flex items-center justify-center w-[650px] bg-bg-primary fixed text-[#f3f5f7]">
@@ -189,50 +104,13 @@ function Detail() {
                   .split("\n")
                   .map((content, index) => <p key={index}>{content}</p>)}
             </div>
-            <div>
+            <div
+              className={` flex items-center gap-2 overflow-x-scroll no-scrollbar`}
+            >
               {medias &&
-                medias.map(
-                  (media: Media) =>
-                    media && (
-                      <div className="flex gap-1.5">
-                        {media &&
-                        (media?.media.endsWith(".jpg") ||
-                          media?.media.endsWith(".jpeg") ||
-                          media?.media.endsWith(".png")) ? (
-                          <div className="flex gap-1.5">
-                            <picture>
-                              <img
-                                className="rounded-lg max-h-[450px] object-cover"
-                                src={media?.media}
-                                alt=""
-                              />
-                            </picture>
-                          </div>
-                        ) : (
-                          <div className="relative rounded-lg">
-                            <video
-                              src={media?.media}
-                              className="max-h-[450px] rounded-lg object-cover"
-                              ref={refVideo}
-                            ></video>
-                            <div
-                              className="absolute right-2 bottom-3"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                setOnValue(!onValue);
-                              }}
-                            >
-                              {onValue ? (
-                                <VolumeOffIcon className="text-[#f3f5f7]" />
-                              ) : (
-                                <VolumeUpIcon className="text-[#f3f5f7]" />
-                              )}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    )
-                )}
+                medias.map((media: IMedia, index: number) => (
+                  <Media index={index} media={media} medias={medias} />
+                ))}
             </div>
             <div className="flex items-center justify-start ">
               <div className="text-[#ccc] flex items-center ">

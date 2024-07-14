@@ -1,12 +1,9 @@
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef } from "react";
-import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { useParams } from "react-router-dom";
-import { fetchId, fetchPost } from "~/API";
-import { FetchDelete } from "~/API/FetchPost";
+import { fetchId } from "~/API";
 import Posts from "~/components/common/posts";
 import { IUser } from "~/types/user";
 import Tippy from "@tippyjs/react/headless";
@@ -16,33 +13,25 @@ import {
   setUpdateProfile,
 } from "~/Redux/actionSlice";
 import EditProfile from "./editProfile";
+import Follow from "~/components/common/follow";
 
 function Profile() {
-  const queryClient = useQueryClient();
   const { id } = useParams<{ id: string }>();
   const refProfile = useRef(null);
   const u = useSelector((state) => state?.auth.login.currentUser);
   const api = useSelector((state) => state?.api.actions);
   const dispatch = useDispatch();
-  const { mutate: follow } = fetchPost();
-  const { mutate: unFollow } = FetchDelete();
-  const { data: countFollowers, refetch: refetchFollower } = fetchId(
-    "/users/getCountFollower/",
-    String(id)
-  );
-  const { data: getFollows } = fetchId("/users/getFollow/", String(id));
+
   const { data: users, refetch: refetchGetMe } = fetchId(
     "/users/getMe/",
     String(id)
   );
 
   const user: IUser = users?.detailUser;
-  const countFollower = countFollowers?.countFollower;
 
   useEffect(() => {
-    refetchFollower();
     refetchGetMe();
-  }, [refetchFollower, refetchGetMe]);
+  }, [refetchGetMe]);
 
   useEffect(() => {
     if (refProfile.current) {
@@ -50,50 +39,10 @@ function Profile() {
     }
   }, []);
 
-  const handleFollow = () => {
-    const data = {
-      followerId: u?.idUser,
-      followingId: id,
-    };
-    follow(
-      { url: "/users/follow", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getCountFollower/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getFollow/"],
-          });
-        },
-      }
-    );
-  };
-
-  const handleUnFollow = () => {
-    const data = {
-      followerId: u?.idUser,
-      followingId: id,
-    };
-    unFollow(
-      { url: "/users/unFollow", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getCountFollower/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getFollow/"],
-          });
-          toast("Đã bỏ theo dõi");
-        },
-      }
-    );
-  };
-
-  const isFollow = getFollows?.allFollow.some(
-    (follow: { followerId: string }) => follow.followerId === u?.idUser
-  );
+  const { isFollow, countFollower, handleFollow, handleUnFollow } = Follow({
+    meId: u?.idUser,
+    youId: String(id),
+  });
 
   return (
     <div

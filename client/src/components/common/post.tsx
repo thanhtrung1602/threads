@@ -11,169 +11,36 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useQueryClient } from "@tanstack/react-query";
 import moment from "moment";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
-import { fetchId, fetchPost } from "~/API";
-import { FetchDel, FetchDelete } from "~/API/FetchPost";
+import { fetchId } from "~/API";
+import { FetchDel } from "~/API/FetchPost";
 import { IPost } from "~/types/post";
-import { IUser } from "~/types/user";
 import { setComment, setDetail, setProfile } from "~/Redux/actionSlice";
-import VolumeOffIcon from "@mui/icons-material/VolumeOff";
-import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import Tippy from "@tippyjs/react/headless";
-import toast from "react-hot-toast";
 import DeleteIcon from "@mui/icons-material/Delete";
-type Liked = {
-  id: number;
-  status: boolean;
-  user_id: string;
-  postId: number;
-  userData: IUser;
-};
-
-type Media = {
-  id: number;
-  media: string;
-  post_id: number;
-};
+import { IMedia } from "~/types/media";
+import Media from "./mediaPost";
+import Follow from "./follow";
+import Like from "./like";
 
 function Post({ post }: { key: number; post: IPost }) {
   const queryClient = useQueryClient();
   const u = useSelector((state) => state?.auth.login.currentUser);
-  const { mutate: liked, reset: resetLiked } = fetchPost();
-  const { mutate: unLiked, reset: resetUnLiked } = FetchDelete();
-  const [statusLike, setStatusLike] = useState<Liked[]>([]);
-  const { data: getStatus } = fetchId("/posts/getLike/", Number(post?.id));
-  const { data: countLikes } = fetchId(
-    "/posts/getCountLike/",
-    Number(post?.id)
-  );
   const { data: countComments } = fetchId(
     "/comment/getCountComment/",
     Number(post?.id)
   );
-  const { data: getFollows } = fetchId(
-    "/users/getFollow/",
-    String(post?.userData?.idUser)
-  );
-  const { data: countFollowers } = fetchId(
-    "/users/getCountFollower/",
-    String(post?.userData?.idUser)
-  );
-  const countFollower = countFollowers?.countFollower;
-  const [onValue, setOnValue] = useState(true);
   const [onProfile, setOnProfile] = useState(false);
   const [del, setDel] = useState(false);
   const countComment = countComments?.count;
-  const countLike = countLikes?.count;
   const { data: mediaPost } = fetchId("/posts/getMedia/", Number(post?.id));
   const dispatch = useDispatch();
-  const refVideo = useRef(null);
-  const { mutate: follow } = fetchPost();
-  const { mutate: unFollow } = FetchDelete();
+
   const { mutate: delPost } = FetchDel();
   const medias = mediaPost?.getMedia;
-
-  useEffect(() => {
-    if (refVideo.current) {
-      refVideo.current.autoplay = true;
-      refVideo.current.loop = true;
-      refVideo.current.muted = onValue;
-      refVideo.current.play();
-    }
-  }, [onValue]);
-
-  useEffect(() => {
-    setStatusLike(getStatus?.status || []);
-  }, [getStatus]);
-
-  const handleLiked = (postId: number) => {
-    const data = {
-      postId,
-      user_id: u?.idUser,
-      status: 1,
-    };
-    liked(
-      { url: "/posts/liked", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/posts/getCountLike/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/posts/getLike/"],
-          });
-        },
-      }
-    );
-  };
-
-  const handleUnLike = (postId: number) => {
-    const data = {
-      postId,
-      user_id: u?.idUser,
-    };
-    unLiked(
-      { url: "/posts/unLiked", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/posts/getCountLike/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/posts/getLike/"],
-          });
-        },
-      }
-    );
-  };
-
-  useEffect(() => {
-    resetLiked();
-    resetUnLiked();
-  }, [resetLiked, resetUnLiked]);
-
-  const handleFollow = () => {
-    const data = {
-      followerId: u?.idUser,
-      followingId: post?.userData?.idUser,
-    };
-    follow(
-      { url: "/users/follow", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getCountFollower/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getFollow/"],
-          });
-        },
-      }
-    );
-  };
-  const handleUnFollow = () => {
-    const data = {
-      followerId: u?.idUser,
-      followingId: post?.userData?.idUser,
-    };
-    unFollow(
-      { url: "/users/unFollow", data },
-      {
-        onSuccess: () => {
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getCountFollower/"],
-          });
-          queryClient.invalidateQueries({
-            queryKey: ["/users/getFollow/"],
-          });
-          toast("Đã bỏ theo dõi");
-        },
-      }
-    );
-  };
 
   const handleDelPost = (id: number) => {
     delPost(`/posts/delPost/${id}`, {
@@ -188,10 +55,16 @@ function Post({ post }: { key: number; post: IPost }) {
     });
   };
 
-  const isLiked = statusLike.some((like) => like.user_id === u?.idUser);
-  const isFollow = getFollows?.allFollow.some(
-    (follow: { followerId: string }) => follow.followerId === u?.idUser
-  );
+  const { isFollow, countFollower, handleFollow, handleUnFollow } = Follow({
+    meId: u?.idUser,
+    youId: post?.userData?.idUser,
+  });
+
+  const { isLiked, countLike, handleLiked, handleUnLike } = Like({
+    meId: u?.idUser,
+    postId: post?.id,
+  });
+
   return (
     <div className="py-3 px-6 border-t border-b-outline" key={post?.id}>
       <Link
@@ -373,63 +246,8 @@ function Post({ post }: { key: number; post: IPost }) {
               className={` flex items-center gap-2 overflow-x-scroll no-scrollbar`}
             >
               {medias &&
-                medias.map((media: Media, index: number) => (
-                  <div
-                    className={`${
-                      medias.length >= 2 && "relative flex-shrink-0 h-[240px]"
-                    }`}
-                    key={index}
-                  >
-                    {media && (
-                      <>
-                        {media.media && (
-                          <>
-                            {media.media.endsWith(".jpg") ||
-                            media.media.endsWith(".jpeg") ||
-                            media.media.endsWith(".png") ? (
-                              <img
-                                className={`${
-                                  medias.length > 1
-                                    ? "max-h-[240px] w-full"
-                                    : ""
-                                } ${index === 0 && "ml-3"} ${
-                                  medias.length >= 2
-                                    ? "max-h-[240px] w-full"
-                                    : ""
-                                } ${
-                                  index !== 0 && "ml-2"
-                                } rounded-lg w-full h-full object-cover`}
-                                src={media.media}
-                                alt=""
-                                loading="lazy"
-                              />
-                            ) : (
-                              <div className="relative">
-                                <video
-                                  src={media.media}
-                                  className="max-h-[450px] rounded-lg object-cover"
-                                  ref={refVideo}
-                                ></video>
-                                <div
-                                  className="absolute right-2 bottom-3"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    setOnValue(!onValue);
-                                  }}
-                                >
-                                  {onValue ? (
-                                    <VolumeOffIcon className="text-[#f3f5f7]" />
-                                  ) : (
-                                    <VolumeUpIcon className="text-[#f3f5f7]" />
-                                  )}
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
+                medias.map((media: IMedia, index: number) => (
+                  <Media index={index} media={media} medias={medias} />
                 ))}
             </div>
             <div
